@@ -1,17 +1,17 @@
-#The sources in this project demonstrate the ability to send data through Kafka into the PostgreSQL database.
+# The sources in this project demonstrate the ability to send data through Kafka into the PostgreSQL database.
 
 
-#Pre-Requisites
+# Pre-Requisites
 - Python version > 3.0
 
 - install kafka-ptyhon   e.g python3.8 pip install kafka-python
-  ## It’s a client that is been used in the sources to connect to the Kafka, primarily to publish and subscribe the message.  
+  #It’s a client that is been used in the sources to connect to the Kafka, primarily to publish and subscribe the message.  
      More info https://pypi.org/project/kafka-python/
 
 - install psycopg2
-  # its PostgreSQL adapter for python programming.
+  #its PostgreSQL adapter for python programming.
 
-#Usage and steps
+# Usage and steps
 
 1) Edit database.ini in the source and store your database credentials under the PostgreSQL section.
 
