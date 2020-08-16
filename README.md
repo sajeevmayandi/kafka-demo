@@ -1,17 +1,17 @@
-The sources in this project demonstrate the ability to send data through Kafka into the PostgreSQL database.
-==========================================================================================================
+#The sources in this project demonstrate the ability to send data through Kafka into the PostgreSQL database.
 
-##Pre-Requisites
+
+#Pre-Requisites
 - Python version > 3.0
 
 - install kafka-ptyhon   e.g python3.8 pip install kafka-python
-  # It’s a client that is been used in the sources to connect to the Kafka, primarily to publish and subscribe the message.  
+  ## It’s a client that is been used in the sources to connect to the Kafka, primarily to publish and subscribe the message.  
      More info https://pypi.org/project/kafka-python/
 
 - install psycopg2
   # its PostgreSQL adapter for python programming.
 
-##Usage and steps
+#Usage and steps
 
 1) Edit database.ini in the source and store your database credentials under the PostgreSQL section.
 
@@ -26,7 +26,7 @@ password=<password>           # password of the database
     schema of your choice. After the successful completion of the step database will have  table by the name "kafka_data" created in the public schema.    
     Streaming data gets dumped into this table as TEXT in column "msg"
 
-#  python3.8 config.py
+e.g. #  python3.8 config.py
 
 3) Start the Kafka cluster, if it’s not running
 
@@ -48,7 +48,7 @@ password=<password>           # password of the database
 
    e.g. #Usage: receive_from_kafka  <topic_name> <broker_ip>
 
-   Optimization:
+  # Optimization:
      -- database password could be send as parameter to the config.py and receive_from_kafka.py. This ensures that database password is not compromised if anybody got the
         access to the system.
      -- The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
