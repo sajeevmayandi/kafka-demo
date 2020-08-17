@@ -9,6 +9,9 @@ import time
 from kafka import KafkaConsumer, KafkaProducer
 
 seen_file_paths = []
+#security_protocol = "SASL_PLAINTEXT"
+security_protocol = "SSL"
+
 
 def get_formatted(file_path):
     p = subprocess.Popen(
@@ -29,7 +32,15 @@ def get_formatted(file_path):
 def publish_to_kafka(message,kafka_topic,kafka_broker):
     producer = None
     try:
-       producer = KafkaProducer(bootstrap_servers=[kafka_broker], api_version=(0, 10),linger_ms=10)
+       producer = KafkaProducer(bootstrap_servers=[kafka_broker], 
+#				api_version=(0, 10),
+				security_protocol=security_protocol,
+				ssl_check_hostname=False,
+				ssl_cafile='./keys/ca.pem',
+                		ssl_certfile='./keys/service.cert',
+                		ssl_keyfile='./keys/service.key',
+				linger_ms=10
+				)
        producer.send(kafka_topic,message)
        producer.flush()
        print('Message published successfully.')
@@ -67,7 +78,7 @@ def stream_data(topic_name, kafka_broker, data_dir, stream_freq):
 
 def main():
     if len(sys.argv) != 5:
-        print ("Usage: streamtokafka <topic_name> <broker_ip> <netflow_files_dir> <stream_frequency_seconds>")
+        print ("Usage: streamtokafka <topic_name> <broker_ip> <data_dir> <stream_frequency_seconds>")
         return
 
     topic_name = sys.argv[1]

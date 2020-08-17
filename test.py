@@ -1,7 +1,14 @@
+import os
+import sys,logging
+import subprocess
+import socket
+import pdb
+import time
 import psycopg2
 from psycopg2 import Error
 from configparser import ConfigParser
 
+seen_file_paths = []
 # function to parse the database.ini
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -19,26 +26,29 @@ def config(filename='database.ini', section='postgresql'):
         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
     return db
 
-# function creates the initiall schema
-def create_table():
+
+# function is used to query the table kafka_data. 
+def query_table():
     param = config();
     conn = psycopg2.connect(**param)
     curs = conn.cursor()
     
-    SQL = ''' DROP TABLE IF EXISTS kafka_data;
-              CREATE TABLE kafka_data (
-                msg text,
-                created_on timestamp with time zone DEFAULT now()
-              );
-              ALTER TABLE kafka_data OWNER to avnadmin; '''
+    SQLONE = ''' select count(*) from kafka_data;'''
     
     try:
-      curs.execute(SQL) 
-      conn.commit()
-      print("Table created successfully in PostgreSQL ")
+      curs.execute(SQLONE) 
+      row = curs.fetchone()
+
+      if row == None:
+            curs.close()
+            conn.close()
+            return
+
+      print( "Total Database Row Count : ",f"{row[0]}")
+      print( "Please do wc -l | file_name. The count should match the database count  ")
+
     except Exception:
-      print( "Exception  inserting the data")
-      conn.rollback()
+      print( "Exception  querying the data")
     finally:
     #closing database connection.
         if(conn):
@@ -46,7 +56,11 @@ def create_table():
             conn.close()
 
 def main():
-    create_table()
+    logging.basicConfig(
+ 	   format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
+	    level=logging.INFO
+    )
+    query_table()
 
 
 

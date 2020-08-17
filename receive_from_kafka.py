@@ -10,6 +10,7 @@ from configparser import ConfigParser
 
 
 # The script help get the data in the byte string from a given topic and inserts into the database 
+security_protocol = "SSL"
 
 
 # Read the details of the database from .ini file.
@@ -32,15 +33,23 @@ def config(filename='database.ini', section='postgresql'):
 
 # function to receive the data from the given topic
 def receive_from_kafka( kafka_topic, kafka_broker):
-       consumer = KafkaConsumer(kafka_topic, auto_offset_reset='earliest',
-                             bootstrap_servers=[kafka_broker], api_version=(0, 10), consumer_timeout_ms=1000)
+       consumer = KafkaConsumer(kafka_topic, 
+				auto_offset_reset='earliest',
+                             	bootstrap_servers=[kafka_broker], 
+				#api_version=(0, 10), 
+			        security_protocol=security_protocol,
+				ssl_check_hostname=False,
+				ssl_cafile='./keys/ca.pem',
+                		ssl_certfile='./keys/service.cert',
+                		ssl_keyfile='./keys/service.key',
+				consumer_timeout_ms=1000)
        for msg in consumer:
           bytestring = msg.value
 	  # the data is in bye decode and split the data based on \n
           text = bytestring.decode('utf-8')
           for line in text.split("\n"):
-             print(line)
-             insert_to_db(line)
+             if (len(line) != 0): 
+               insert_to_db(line)
        consumer.close()
 
 
