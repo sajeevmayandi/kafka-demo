@@ -49,6 +49,7 @@ def receive_from_kafka( kafka_topic, kafka_broker):
           text = bytestring.decode('utf-8')
           for line in text.split("\n"):
              if (len(line) != 0): 
+               print(line)
                insert_to_db(line)
        consumer.close()
 
