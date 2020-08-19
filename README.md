@@ -1,4 +1,4 @@
-# The sources in this project demonstrate the ability to send data received GPS location from Bikes telematics, in realtime through kafka into the PostgreSQL database
+The sources in this project demonstrate the ability to send data received GPS location from Bikes telematics, in realtime through kafka into the PostgreSQL database
 
 # Pre-Requisites
 - Python version > 3.0
@@ -58,7 +58,7 @@ Usage: receive_from_kafka  <topic_name> <broker_ip:portno> <ca> <cert> <key>
 
 e.g. python3.8 receive_from_kafka.py gps-3  kafka-df561d5-sajeev-092f.aivencloud.com:15909  keys/ca.pem keys/service.cert  keys/service.key
 
-Testing:
+# Testing:
 
 1) The provided  script below will read total count from the aiven database. The count should be equivalent to the no of lines in the files present in <data_dir> directory.
    This ensures that total of lines that was streamed from the data directory is same is the one seen in the database
@@ -78,7 +78,7 @@ Usage: generate.py  <telematic_id> <file_name> <noof-gps-cordinates
 
 e.g.   python3.8 generate.py  csv/dummy.txt 200 
 
-Optimization:
+# Optimization:
 
      -- The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
         or  database trigger that takes the data from kafka_data and do a post processing  and inserts the data into reporting database for reports that is required for 
