@@ -1,4 +1,9 @@
-The sources in this project demonstrate the ability to send data received GPS location from Bikes telematics, in realtime through kafka into the PostgreSQL database
+The sources in this project demonstrate the ability to send data received GPS location from Bikes telematics, in realtime through kafka into the PostgreSQL database.
+
+Use case:
+   1) To get all the GPS location send by all telematics
+   2) Get the latest GPS location for all the telematics
+   3) Get total no of reported telematics
 
 # Pre-Requisites
 - Python version > 3.0
@@ -83,6 +88,11 @@ e.g.   python3.8 generate.py  csv/dummy.txt 200
      -- The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
         or  database trigger that takes the data from kafka_data and do a post processing  and inserts the data into reporting database for reports that is required for 
         the business use case.
-        e.g. I would like to use the mileage of my bikes based on the telematic id,latitude and longitude information.
+        e.g.
+        a) I would like to use the mileage of my bikes based on the telematic id,latitude and longitude information.
+        b) Total no of telematics reported hourly, daily, weekly and monthly
+        c) current location of the GPS of all the telematic into seperate table
+        
+        
 
       
