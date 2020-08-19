@@ -42,6 +42,7 @@ def create_table(table_name: str):
                 table_name=sql.Identifier(table_name), )
 
             curs.execute(stmt)
+        conn.commit()
         print("Table created successfully in PostgreSQL ")
     except Exception:
         print("Exception  Database creation ")
