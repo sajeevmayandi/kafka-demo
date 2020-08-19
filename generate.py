@@ -1,9 +1,10 @@
-import random
-import os
-import sys
-import math
 import json
-import sys, logging
+import logging
+import math
+import os
+import random
+import sys
+import sys
 
 
 # function to generate the test data with given telematic id
@@ -28,10 +29,9 @@ def generate_gps(telematic_id, file_name, noofgps):
                 yLong = y + y0
                 data = {}
                 data['GPS'] = []
-                data['GPS'].append({'telematicid': str(telematic_id), 'Longitude': str(xLat),
-                                    'Latitude': str(yLong)
-                                    })
-                #    	         json.dump(data, outfile)
+                data['GPS'].append({'telematicid': str(telematic_id)})
+                data['GPS'].append({'Longitude': str(xLat)})
+                data['GPS'].append({'Latitude': str(yLong)})
                 outfile.write(json.dumps(data))
                 outfile.write("\n")
 
