@@ -1,14 +1,17 @@
 import os
-import sys,logging
+import sys, logging
 import subprocess
 import socket
 import pdb
 import time
 import psycopg2
 from psycopg2 import Error
+from psycopg2 import sql
 from configparser import ConfigParser
 
 seen_file_paths = []
+
+
 # function to parse the database.ini
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -27,44 +30,87 @@ def config(filename='database.ini', section='postgresql'):
     return db
 
 
-# function is used to query the table kafka_data. 
-def query_table():
-    param = config();
-    conn = psycopg2.connect(**param)
-    curs = conn.cursor()
-    
-    SQLONE = ''' select count(*) from kafka_data;'''
-    
-    try:
-      curs.execute(SQLONE) 
-      row = curs.fetchone()
+# Calculate total no of lines in the files
+def total_lines_in_file(fname):
+    return len(open(fname).readlines())
 
-      if row == None:
+
+# function to scan the data directory
+def scan_data(data_dir):
+    try:
+        files = os.listdir(data_dir)
+        files.sort()
+        lines = 0
+        for f in files:
+            file_path = ''.join([data_dir, '/', f])
+            if not 'current' in f and not file_path in seen_file_paths:
+                seen_file_paths.append(file_path)
+                if os.path.isfile(file_path):
+                    print('Processing file {}'.format(file_path))
+                    lines = lines + total_lines_in_file(file_path)
+        return lines
+    except OSError as err:
+        print(''.join(['Exception in scan_data: ', str(err)]))
+    except ValueError as err:
+        print(''.join(['Exception in scan_data, value error : ', str(err)]))
+    except:
+        e = sys.exc_info()[0]
+        print(''.join(['Exception in scan_data:', str(e)]))
+
+
+# function is used to query the table kafka_data. 
+def query_table(table_name: str):
+    conn = None
+    try:
+        param = config();
+        conn = psycopg2.connect(**param)
+        curs = conn.cursor()
+
+        with curs as cursor:
+            stmt = sql.SQL("""
+            SELECT
+                count(*)
+            FROM
+                {table_name}
+            """).format(
+                table_name=sql.Identifier(table_name),
+            )
+            curs.execute(stmt)
+            result = curs.fetchone()
+
+        rowcount, = result
+        if rowcount == None:
             curs.close()
             conn.close()
             return
+        return rowcount
 
-      print( "Total Database Row Count : ",f"{row[0]}")
-      print( "Please do wc -l | file_name. The count should match the database count  ")
-
-    except Exception:
-      print( "Exception  querying the data")
+    except psycopg2.OperationalError as e:
+        print('SQL Exception !', e)
+        sys.exit(1)
     finally:
-    #closing database connection.
-        if(conn):
+        # closing database connection.
+        if (conn):
             curs.close()
             conn.close()
 
-def main():
-    logging.basicConfig(
- 	   format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
-	    level=logging.INFO
-    )
-    query_table()
 
+def main():
+    if len(sys.argv) != 2:
+        print(" ")
+        print("Usage: test.py  <data_dir>")
+        print(" ")
+        return
+
+    logging.basicConfig(
+        format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
+        level=logging.ERROR
+    )
+    data_dir = sys.argv[1]
+
+    print("Total Database Row Count : ", query_table('kafka_data'))
+    print("Total file Count : ", scan_data(data_dir))
 
 
 if __name__ == "__main__":
     main()
-
-

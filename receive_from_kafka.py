@@ -1,5 +1,5 @@
 import os
-import sys,logging
+import sys, logging
 import subprocess
 import socket
 import pdb
@@ -8,8 +8,7 @@ from kafka import KafkaConsumer, KafkaProducer
 import psycopg2
 from configparser import ConfigParser
 
-
-# The script help get the data in the byte string from a given topic and inserts into the database 
+# The script help get the data in the byte string from a given topic and inserts into the database
 security_protocol = "SSL"
 
 
@@ -31,60 +30,93 @@ def config(filename='database.ini', section='postgresql'):
 
     return db
 
+
 # function to receive the data from the given topic
-def receive_from_kafka( kafka_topic, kafka_broker):
-       consumer = KafkaConsumer(kafka_topic, 
-				auto_offset_reset='earliest',
-                             	bootstrap_servers=[kafka_broker], 
-				#api_version=(0, 10), 
-			        security_protocol=security_protocol,
-				ssl_check_hostname=False,
-				ssl_cafile='./keys/ca.pem',
-                		ssl_certfile='./keys/service.cert',
-                		ssl_keyfile='./keys/service.key',
-				consumer_timeout_ms=1000)
-       for msg in consumer:
-          bytestring = msg.value
-	  # the data is in bye decode and split the data based on \n
-          text = bytestring.decode('utf-8')
-          for line in text.split("\n"):
-             if (len(line) != 0): 
-               print(line)
-               insert_to_db(line)
-       consumer.close()
+def receive_from_kafka(kafka_topic, kafka_broker, ssl_cafile, ssl_certfile, ssl_keyfile):
+    try:
+        consumer = KafkaConsumer(kafka_topic,
+                                 auto_offset_reset='earliest',
+                                 bootstrap_servers=[kafka_broker],
+                                 security_protocol=security_protocol,
+                                 ssl_check_hostname=False,
+                                 ssl_cafile=ssl_cafile,
+                                 ssl_certfile=ssl_certfile,
+                                 ssl_keyfile=ssl_keyfile,
+                                 consumer_timeout_ms=1000)
+
+        while True:
+            message = consumer.poll(5000)
+            if not message:
+                print("No more messages from topic:", kafka_topic)
+                break
+
+            # Get one message at a time within last 5 seconds
+            for tp, msglist in message.items():  # iterate through messages
+                print("Fetched the data from topic = %s : " % tp.topic)
+                for msg in msglist:
+                    bytestring = msg.value
+                    # the data is in bye decode and split the data based on \n
+                    text = bytestring.decode('utf-8')
+                    insert_to_db(text)
+                    print("Inserted  data into the database successfully:")
+
+    except Exception as ex:
+        print('Exception while Fetching  data ')
+        print(str(ex))
 
 
 # function to insert the data into the database
-def insert_to_db(line):
-   param = config();
-   conn = psycopg2.connect(**param)
-   curs = conn.cursor()
+def insert_to_db(lines):
+    try:
+        conn = None
+        param = config();
+        conn = psycopg2.connect(**param)
+        curs = conn.cursor()
+        print("Inserting data into the database, Please wait ..:", lines)
 
-   try:
-      SQL = "INSERT INTO kafka_data(msg) VALUES (%s);" 
-      data = (line,)
-      curs.execute(SQL, data) 
-      conn.commit()
-   except Exception:
-      print( "Exception  inserting the data")
-      conn.rollback()
-   finally:
-    #closing database connection.
-        if(conn):
+        for line in lines.split("\n"):
+            if (len(line) == 0):
+                continue
+            SQL = "INSERT INTO kafka_data(msg) VALUES (%s);"
+            data = (line,)
+            curs.execute(SQL, data)
+            # commit only after all the data is inserted
+        conn.commit()
+    except psycopg2.OperationalError as e:
+        print('SQL Exception !', e)
+        if (conn):
+            conn.rollback()
+            sys.exit(1)
+    finally:
+        # closing database connection.
+        if (conn):
             curs.close()
             conn.close()
 
+
 def main():
-    if len(sys.argv) != 3:
-        print ("Usage: receive_from_kafka  <topic_name> <broker_ip> ")
+    if len(sys.argv) != 6:
+        print(" ")
+        print("Usage: receive_from_kafka  <topic_name> <broker_ip:portno> <ca> <cert> <key>")
+        print(" ")
+        print(" topic_name	  : Name of the topic to stream data")
+        print(" broker_ip:portno : IP Address or URL of the kafka broker along with portno. Provide Portno ")
+        print(" ca               : CA file for certificate verification ")
+        print(" cert             : Client Certificate file")
+        print(" key              : Client Private key ")
         return
 
+    logging.basicConfig(
+        format='%(asctime)s.%(msecs)s:%(name)s:%(thread)d:%(levelname)s:%(process)d:%(message)s',
+        level=logging.ERROR
+    )
     topic_name = sys.argv[1]
     broker_ip = sys.argv[2]
-    receive_from_kafka(topic_name, broker_ip)
-
+    ca = sys.argv[3]
+    cert = sys.argv[4]
+    key = sys.argv[5]
+    receive_from_kafka(topic_name, broker_ip, ca, cert, key)
 
 
 if __name__ == "__main__":
     main()
-

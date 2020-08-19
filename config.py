@@ -1,6 +1,8 @@
 import psycopg2
+from psycopg2 import sql
 from psycopg2 import Error
 from configparser import ConfigParser
+
 
 # function to parse the database.ini
 def config(filename='database.ini', section='postgresql'):
@@ -19,38 +21,41 @@ def config(filename='database.ini', section='postgresql'):
         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
     return db
 
+
 # function creates the initiall schema
-def create_table():
-    param = config();
-    conn = psycopg2.connect(**param)
-    curs = conn.cursor()
-    
-    SQL = ''' DROP TABLE IF EXISTS kafka_data;
-              CREATE TABLE kafka_data (
-                msg text,
+def create_table(table_name: str):
+    conn = None
+    try:
+        param = config();
+        conn = psycopg2.connect(**param)
+        curs = conn.cursor()
+
+        with curs as cursor:
+            stmt = sql.SQL("""
+            DROP TABLE IF EXISTS {table_name};
+             CREATE TABLE {table_name} (
+               msg text,
                 created_on timestamp with time zone DEFAULT now()
               );
-              ALTER TABLE kafka_data OWNER to avnadmin; '''
-    
-    try:
-      curs.execute(SQL) 
-      conn.commit()
-      print("Table created successfully in PostgreSQL ")
+              ALTER TABLE {table_name}  OWNER to avnadmin;
+            """).format(
+                table_name=sql.Identifier(table_name), )
+
+            curs.execute(stmt)
+        print("Table created successfully in PostgreSQL ")
     except Exception:
-      print( "Exception  inserting the data")
-      conn.rollback()
+        print("Exception  Database creation ")
+        conn.rollback()
     finally:
-    #closing database connection.
-        if(conn):
+        # closing database connection.
+        if (conn):
             curs.close()
             conn.close()
 
-def main():
-    create_table()
 
+def main():
+    create_table("kafka_data")
 
 
 if __name__ == "__main__":
     main()
-
-
