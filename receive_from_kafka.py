@@ -58,11 +58,12 @@ def receive_from_kafka(kafka_topic, kafka_broker, ssl_cafile, ssl_certfile, ssl_
                     # the data is in bye decode and split the data based on \n
                     text = bytestring.decode('utf-8')
                     insert_to_db(text)
-                    print("Inserted  data into the database successfully:")
+                print("Inserted  messages  into the database successfully:")
 
     except Exception as ex:
         print('Exception while Fetching  data ')
         print(str(ex))
+        sys.exit(1)
 
 
 # function to insert the data into the database
@@ -72,7 +73,7 @@ def insert_to_db(lines):
         param = config();
         conn = psycopg2.connect(**param)
         curs = conn.cursor()
-        print("Inserting data into the database, Please wait ..:", lines)
+       # print("Inserting data into the database, Please wait ..:", lines)
 
         for line in lines.split("\n"):
             if (len(line) == 0):

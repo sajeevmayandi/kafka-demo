@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS kafka_data;
+DROP TABLE IF EXISTS kafka_data CASCADE;
 CREATE TABLE kafka_data (
                msg text,
                 created_on timestamp with time zone DEFAULT now()
@@ -74,3 +74,4 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS telematic_details AS
                  from ( select msg::json->>'GPS' as gps  from kafka_data) as t,
                        current_realtime_data cr where cr.telematic_id = (t.gps::json->0)->>'telematicid'
                    group by (t.gps::json->0)->>'telematicid',cr.updated_on;
+REFRESH MATERIALIZED VIEW telematic_details;

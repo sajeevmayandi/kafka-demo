@@ -4,7 +4,6 @@ import math
 import os
 import random
 import sys
-import sys
 
 
 # function to generate the test data with given telematic id
@@ -37,11 +36,14 @@ def generate_gps(telematic_id, file_name, noofgps):
 
     except OSError as err:
         print(''.join(['Exception in generate_gps: ', str(err)]))
+        exit(-1)
     except ValueError as err:
         print(''.join(['Exception in generate_gps, value error : ', str(err)]))
+        exit(-1)
     except:
         e = sys.exc_info()[0]
         print(''.join(['Exception in generate_gps:', str(e)]))
+        exit(-1)
 
 
 def main():

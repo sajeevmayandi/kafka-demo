@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2 import Error
 from configparser import ConfigParser
+import sys
 
 
 # function to parse the database.ini
@@ -22,31 +23,20 @@ def config(filename='database.ini', section='postgresql'):
     return db
 
 
-# function creates the initiall schema
-def create_table(table_name: str):
+# function creates the initial schema
+def create_schema(schema_file: str):
     conn = None
     try:
         param = config();
         conn = psycopg2.connect(**param)
         curs = conn.cursor()
-
-        with curs as cursor:
-            stmt = sql.SQL("""
-            DROP TABLE IF EXISTS {table_name};
-             CREATE TABLE {table_name} (
-               msg text,
-                created_on timestamp with time zone DEFAULT now()
-              );
-              ALTER TABLE {table_name}  OWNER to avnadmin;
-            """).format(
-                table_name=sql.Identifier(table_name), )
-
-            curs.execute(stmt)
+        curs.execute(open(schema_file, "r").read())
         conn.commit()
-        print("Table created successfully in PostgreSQL ")
+        print("Schema created successfully in PostgreSQL ")
     except Exception:
-        print("Exception  Database creation ")
+        print("Exception  Schema creation ")
         conn.rollback()
+        sys.exit(1)
     finally:
         # closing database connection.
         if (conn):
@@ -55,7 +45,14 @@ def create_table(table_name: str):
 
 
 def main():
-    create_table("kafka_data")
+    if len(sys.argv) != 2:
+        print(" ")
+        print("Usage: config  <schema_file>")
+        print(" ")
+        return
+    file_name = sys.argv[1]
+
+    create_schema(file_name)
 
 
 if __name__ == "__main__":

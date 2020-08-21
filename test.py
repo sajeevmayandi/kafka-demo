@@ -46,20 +46,20 @@ def scan_data(data_dir):
             if not 'current' in f and not file_path in seen_file_paths:
                 seen_file_paths.append(file_path)
                 if os.path.isfile(file_path):
-                    print('Processing file {}'.format(file_path))
                     lines = lines + total_lines_in_file(file_path)
         return lines
     except OSError as err:
         print(''.join(['Exception in scan_data: ', str(err)]))
-    except ValueError as err:
         print(''.join(['Exception in scan_data, value error : ', str(err)]))
+        sys.exit(1)
     except:
         e = sys.exc_info()[0]
         print(''.join(['Exception in scan_data:', str(e)]))
+        sys.exit(1)
 
 
-# function is used to query the table kafka_data. 
-def query_table(table_name: str):
+# function is used to query the table kafka_data.
+def query_count(table_name: str):
     conn = None
     try:
         param = config();
@@ -79,11 +79,76 @@ def query_table(table_name: str):
             result = curs.fetchone()
 
         rowcount, = result
-        if rowcount == None:
+
+        curs.close()
+        conn.close()
+
+        return rowcount
+
+    except psycopg2.OperationalError as e:
+        print('SQL Exception !', e)
+        sys.exit(1)
+    finally:
+        # closing database connection.
+        if (conn):
             curs.close()
             conn.close()
-            return
-        return rowcount
+
+
+# refreshes the materialize view.
+def refresh_view(table_name: str):
+    conn = None
+    try:
+        param = config();
+        conn = psycopg2.connect(**param)
+        curs = conn.cursor()
+
+        with curs as cursor:
+            stmt = sql.SQL("""
+                    
+            REFRESH MATERIALIZED VIEW {table_name}
+            """).format(
+                table_name=sql.Identifier(table_name),
+            )
+            curs.execute(stmt)
+        conn.commit()
+        curs.close()
+        conn.close()
+        return
+
+    except psycopg2.OperationalError as e:
+        print('SQL Exception !', e)
+        sys.exit(1)
+    finally:
+        # closing database connection.
+        if (conn):
+            curs.close()
+            conn.close()
+
+
+# Fetch Telematic details.
+def get_telematic_details(table_name: str):
+    conn = None
+    try:
+        param = config();
+        conn = psycopg2.connect(**param)
+        curs = conn.cursor()
+
+        with curs as cursor:
+            stmt = sql.SQL("""
+            select telematic_id,total_no_of_gpsfixes, last_reported_date from  {table_name}
+            """).format(
+                table_name=sql.Identifier(table_name),
+            )
+            curs.execute(stmt)
+            rows = curs.fetchall()
+            print("telematic id            total no of gpsfixes          last known reported date")
+            for row in rows:
+              print(f"{row[0]}                       {row[1]}                           {row[2]}")
+
+        curs.close()
+        conn.close()
+        return
 
     except psycopg2.OperationalError as e:
         print('SQL Exception !', e)
@@ -108,8 +173,14 @@ def main():
     )
     data_dir = sys.argv[1]
 
-    print("Total Database Row Count : ", query_table('kafka_data'))
-    print("Total file Count : ", scan_data(data_dir))
+    print("Test Results:")
+    print("")
+    print("Total Database Row Count in table kafka_data : ", query_count('kafka_data'))
+    print("")
+    print("Total file lines send from data_dir: ", scan_data(data_dir))
+    refresh_view('telematic_details')
+    print("")
+    get_telematic_details('telematic_details')
 
 
 if __name__ == "__main__":

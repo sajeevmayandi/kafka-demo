@@ -45,6 +45,7 @@ def publish_to_kafka(message, kafka_topic, kafka_broker, ssl_catfile, ssl_certif
     except Exception as ex:
         print('Exception while connecting Kafka')
         print(str(ex))
+        sys.exit(1)
 
 
 # stream the constant stream of json data to the kafka
@@ -65,11 +66,14 @@ def stream_data(topic_name, kafka_broker, data_dir, stream_freq, ca, cert, key):
 
     except OSError as err:
         print(''.join(['Exception in stream_data: ', str(err)]))
+        sys.exit(1)
     except ValueError as err:
         print(''.join(['Exception in stream_data, value error : ', str(err)]))
+        sys.exit(1)
     except:
         e = sys.exc_info()[0]
         print(''.join(['Exception in stream_data:', str(e)]))
+        sys.exit(1)
 
 
 def main():
