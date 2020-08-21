@@ -28,14 +28,17 @@ password=<password>           # password of the database
 
 2)  This step configures the database with the database table. The default database in aiven is defaultdb .  After the successful completion of the step 
     database will have  table by the name "kafka_data" created in the public  schema.Streaming data gets dumped into this table as TEXT in column "msg". 
-    Every time you run this application it will drops the table recreate the table
+    Every time you run this application it will drops the table recreate the tables, triggers and materialized views
 
-e.g. #  python3.8 config.py
+e.g. #  python3.8 config.py <schema_file>
 
 3) Start the Kafka cluster, if it’s not running
 
 
-4) The step will stream the data from the files present in the directory  specified in directory "data_dir". As part of the demo I have some demo files containing data in this directory by the name "CSV".  When the program is run it will sort and stream all the files and send the data on the specified topic_name. if the topic is not there it will create  the topic programmatically. The program uses certificate based authentication using SSL. Please pass cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
+4) The step will stream the data from the files present in the directory  specified in directory "data_dir". As part of the demo I have some demo files containing 
+   data in this directory by the name "CSV".  When the program is run it will sort and stream all the files and send the data on the specified topic_name. if the 
+   topic is not there it will create  the topic programmatically. The program uses certificate based authentication using SSL. Please pass cert ,pem file and keys  
+   as a part of the usage to connect with aiven kafka cloud.
 
 Usage: streamtokafka <topic_name> <broker_ip:portno> <data_dir> <stream_freq> <ca> <cert> <key>
  
@@ -50,7 +53,8 @@ Usage: streamtokafka <topic_name> <broker_ip:portno> <data_dir> <stream_freq> <c
 e.g. python3.8 streamtokafka.py gps-3  kafka-df561d5-sajeev-092f.aivencloud.com:15909 csv 3   keys/ca.pem keys/service.cert  keys/service.key 
 
 5) The step will receive the streaming data as a bytes from the topic_name that was used in the step #4. The program decodes the bytes into the text and splits 
- the text based on  newline character and inserts the data into the table "kafka_data".The program uses certificate based authentication using SSL. Please pass cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
+   the text based on  newline character and inserts the data into the table "kafka_data".The program uses certificate based authentication using SSL. Please pass 
+   cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
 
 
 Usage: receive_from_kafka  <topic_name> <broker_ip:portno> <ca> <cert> <key>
@@ -83,9 +87,18 @@ Usage: generate.py  <telematic_id> <file_name> <noof-gps-cordinates
 
 e.g.   python3.8 generate.py  csv/dummy.txt 200 
 
+# Test Automation:
+ 1) Edit test.ini with all the configuration parameter that is applicable to your environment. Its self explanatory. All the parameters are mandatory.
+ 
+ 2) Please populate database.ini with your credentials.
+ 
+ 3) python3.8 master_test.py 
+  ## At the end of the step 3 the script generates datasets, streams the data, receives the data and populates it into the database.
+  ## you would also see the test result, which gives the details of the data set send and received
+ 
 # Optimization:
 
-     -- The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
+        The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
         or  database trigger that takes the data from kafka_data and do a post processing  and inserts the data into reporting database for reports that is required for 
         the business use case.
         e.g.
