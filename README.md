@@ -93,8 +93,9 @@ e.g.   python3.8 generate.py  csv/dummy.txt 200
  2) Please populate database.ini with your credentials.
  
  3) python3.8 master_test.py 
-  ## At the end of the step 3 the script generates datasets, streams the data, receives the data and populates it into the database.
-  ## you would also see the test result, which gives the details of the data set send and received
+  
+ At the end of the step 3 the script generates datasets, streams the data, receives the data and populates it into the database.
+  you would also see the test result, which gives the details of the data set send and received
  
 # Optimization:
 
