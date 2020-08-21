@@ -26,19 +26,19 @@ user=<username>               # username of the database
 password=<password>           # password of the database
 
 
-2)  This step configures the database with the database table. The default database in aiven is defaultdb .  After the successful completion of the step 
-    database will have  table by the name "kafka_data" created in the public  schema.Streaming data gets dumped into this table as TEXT in column "msg". 
-    Every time you run this application it will drops the table recreate the tables, triggers and materialized views
+2)  This step configures the database with the database table. The default database in aiven is defaultdb .  After the successful completion 
+    of the step database will have  table by the name "kafka_data" created in the public  schema.Streaming data gets dumped into this table as 
+    TEXT in column "msg". Every time you run this application it will drops the table recreate the tables, triggers and materialized views
 
 e.g. #  python3.8 config.py <schema_file>
 
 3) Start the Kafka cluster, if it’s not running
 
 
-4) The step will stream the data from the files present in the directory  specified in directory "data_dir". As part of the demo I have some demo files containing 
-   data in this directory by the name "CSV".  When the program is run it will sort and stream all the files and send the data on the specified topic_name. if the 
-   topic is not there it will create  the topic programmatically. The program uses certificate based authentication using SSL. Please pass cert ,pem file and keys  
-   as a part of the usage to connect with aiven kafka cloud.
+4) The step will stream the data from the files present in the directory  specified in directory "data_dir". As part of the demo I have some 
+   demo files containing data in this directory by the name "CSV".  When the program is run it will sort and stream all the files and send the 
+   data on the specified topic_name. if the topic is not there it will create  the topic programmatically. The program uses certificate based 
+   authentication using SSL. Please pass cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
 
 Usage: streamtokafka <topic_name> <broker_ip:portno> <data_dir> <stream_freq> <ca> <cert> <key>
  
@@ -52,9 +52,9 @@ Usage: streamtokafka <topic_name> <broker_ip:portno> <data_dir> <stream_freq> <c
 
 e.g. python3.8 streamtokafka.py gps-3  kafka-df561d5-sajeev-092f.aivencloud.com:15909 csv 3   keys/ca.pem keys/service.cert  keys/service.key 
 
-5) The step will receive the streaming data as a bytes from the topic_name that was used in the step #4. The program decodes the bytes into the text and splits 
-   the text based on  newline character and inserts the data into the table "kafka_data".The program uses certificate based authentication using SSL. Please pass 
-   cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
+5) The step will receive the streaming data as a bytes from the topic_name that was used in the step #4. The program decodes the bytes into the 
+   text and splits the text based on  newline character and inserts the data into the table "kafka_data".The program uses certificate based 
+   authentication using SSL. Please pass cert ,pem file and keys  as a part of the usage to connect with aiven kafka cloud.
 
 
 Usage: receive_from_kafka  <topic_name> <broker_ip:portno> <ca> <cert> <key>
@@ -69,8 +69,10 @@ e.g. python3.8 receive_from_kafka.py gps-3  kafka-df561d5-sajeev-092f.aivencloud
 
 # Testing:
 
-1) The provided  script below will read total count from the aiven database. The count should be equivalent to the no of lines in the files present in <data_dir> directory.
-   This ensures that total of lines that was streamed from the data directory is same is the one seen in the database
+1) The provided  script below will read total count from the aiven database. The count should be equivalent to the no of lines in the files
+   present in <data_dir> directory. This ensures that total of lines that was streamed from the data directory is same is the one seen in the 
+   database
+   
    e.g. #Usage: python3.8 test.py  
 
    Usage: test.py  <data_dir>
@@ -99,9 +101,9 @@ e.g.   python3.8 generate.py  csv/dummy.txt 200
  
 # Optimization:
 
-        The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. There should be ETL process 
-        or  database trigger that takes the data from kafka_data and do a post processing  and inserts the data into reporting database for reports that is required for 
-        the business use case.
+        The script  receive_from_kafka.py reads the bytes from the topic_name and split them in lines, inserts one by one into the database as is. 
+        There should be ETL process or  database trigger that takes the data from kafka_data and do a post processing  and inserts the data into 
+        reporting database for reports that is required for the business use case.
         e.g.
         a) I would like to use the mileage of my bikes based on the telematic id,latitude and longitude information.
         b) Total no of telematics reported hourly, daily, weekly and monthly
